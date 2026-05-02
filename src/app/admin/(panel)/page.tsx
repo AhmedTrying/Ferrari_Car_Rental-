@@ -95,6 +95,7 @@ export default async function DashboardPage() {
                 <th className="col-ref">رقم الحجز</th>
                 <th className="col-customer">العميل</th>
                 <th className="col-car">السيارة</th>
+                <th className="col-notes">الملاحظات</th>
                 <th className="col-date">التاريخ</th>
                 <th className="col-days">الأيام</th>
                 <th className="col-total">الإجمالي</th>
@@ -107,6 +108,7 @@ export default async function DashboardPage() {
                   <td className="num">{b.ref}</td>
                   <td>{b.customer_name}</td>
                   <td>{b.car_label}</td>
+                  <td title={b.notes ?? ''}>{b.notes?.trim() || '—'}</td>
                   <td className="num">{b.pickup_date}</td>
                   <td className="num">{b.days}</td>
                   <td><span className="num">{fmtKwd(Number(b.total_kwd))}</span> د.ك</td>
@@ -115,7 +117,7 @@ export default async function DashboardPage() {
               ))}
               {(recentBookings ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+                  <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
                     لا توجد حجوزات.
                   </td>
                 </tr>

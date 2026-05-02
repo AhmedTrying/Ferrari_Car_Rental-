@@ -262,6 +262,10 @@ export default function BookingsTable({
                 <strong>الحالة:</strong>{' '}
                 <span className={`status-chip ${preview.status}`}>{STATUS_LABELS[preview.status]}</span>
               </div>
+              <div className="booking-preview-notes">
+                <strong>الملاحظات:</strong>{' '}
+                {preview.notes?.trim() ? preview.notes : 'لا توجد ملاحظات.'}
+              </div>
             </div>
             <div className="booking-preview-actions">
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPreview(null)}>

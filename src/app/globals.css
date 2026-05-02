@@ -632,6 +632,7 @@ h1, h2, h3, h4 { font-family: var(--font-cairo), sans-serif; font-weight: 800; l
 .tbl-bookings .col-customer { width: 22%; }
 .tbl-bookings .col-phone { width: 130px; }
 .tbl-bookings .col-car { width: 22%; }
+.tbl-bookings .col-notes { width: 26%; }
 .tbl-bookings .col-date { width: 120px; }
 .tbl-bookings .col-days { width: 84px; }
 .tbl-bookings .col-total { width: 130px; }
@@ -734,6 +735,12 @@ h1, h2, h3, h4 { font-family: var(--font-cairo), sans-serif; font-weight: 800; l
   background: var(--surface-2);
   padding: 10px 12px;
   font-size: 14px;
+}
+.booking-preview-notes {
+  grid-column: 1 / -1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
 }
 .booking-preview-actions {
   display: flex;
