@@ -15,7 +15,7 @@ export default async function BookingPage({
   const { data: cars } = await supabase
     .from('cars')
     .select('*')
-    .eq('available', true)
+    .order('available', { ascending: false })
     .order('price_per_day');
 
   return (

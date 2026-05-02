@@ -36,6 +36,30 @@ export async function submitBooking(input: BookingInput): Promise<BookingResult>
   // entry point — zod validation is the security gate, not RLS, since this runs
   // on the server. The public anon key cannot INSERT into bookings directly.
   const admin = createAdminClient();
+  let trustedCarLabel = data.car_label;
+  let trustedTotal = data.total_kwd;
+
+  if (data.car_id) {
+    const { data: carRow, error: carError } = await admin
+      .from('cars')
+      .select('name_ar, model, price_per_day, available')
+      .eq('id', data.car_id)
+      .maybeSingle();
+
+    if (carError || !carRow) {
+      console.error('booking car lookup error', carError);
+      return { ok: false, error: 'السيارة غير موجودة. يرجى إعادة اختيار السيارة.' };
+    }
+    if (!carRow.available) {
+      return {
+        ok: false,
+        error: 'السيارة المحددة غير متوفرة حاليًا.',
+        fieldErrors: { car_id: 'هذه السيارة محجوزة حاليًا. اختر سيارة أخرى.' },
+      };
+    }
+    trustedCarLabel = `${carRow.name_ar} ${carRow.model}`;
+    trustedTotal = carRow.price_per_day * data.days;
+  }
 
   // Upsert customer (by phone)
   const { data: customer } = await admin
@@ -59,13 +83,13 @@ export async function submitBooking(input: BookingInput): Promise<BookingResult>
       customer_email: data.customer_email || null,
       customer_id: customer?.id ?? null,
       car_id: data.car_id || null,
-      car_label: data.car_label,
+      car_label: trustedCarLabel,
       pickup_date: data.pickup_date,
       days: data.days,
       destination: data.destination || null,
       passengers: data.passengers ?? 2,
       notes: data.notes || null,
-      total_kwd: data.total_kwd,
+      total_kwd: trustedTotal,
       status: 'pending',
       source: 'web',
     })

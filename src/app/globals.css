@@ -339,12 +339,40 @@ h1, h2, h3, h4 { font-family: var(--font-cairo), sans-serif; font-weight: 800; l
 }
 .car-pick:hover { border-color: var(--y-deep); transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0,0,0,.06); }
+.car-pick:disabled { cursor: not-allowed; }
+.car-pick.unavailable {
+  opacity: .82;
+  border-color: var(--line-2);
+  transform: none !important;
+  box-shadow: none !important;
+}
 .car-pick.is-selected {
   border-color: var(--y);
   box-shadow: 0 0 0 3px rgba(255,212,0,.25), 0 6px 24px rgba(0,0,0,.08);
 }
 .car-pick-img { position: relative; aspect-ratio: 16/10; background: var(--bg-2); overflow: hidden; }
 .car-pick-img img { width: 100%; height: 100%; object-fit: cover; }
+.car-pick-status {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+.car-pick-status.available {
+  background: rgba(2,163,86,.14);
+  color: var(--green);
+  border-color: rgba(2,163,86,.34);
+}
+.car-pick-status.booked {
+  background: rgba(230,57,70,.14);
+  color: var(--red);
+  border-color: rgba(230,57,70,.34);
+}
 .car-pick-price {
   position: absolute; bottom: 8px; inset-inline-end: 8px;
   background: rgba(0,0,0,.78); color: #fff;

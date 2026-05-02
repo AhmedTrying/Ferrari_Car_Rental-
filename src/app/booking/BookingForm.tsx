@@ -7,9 +7,21 @@ import { submitBooking } from './actions';
 import type { Car } from '@/lib/supabase/database.types';
 
 export default function BookingForm({ cars, preselectSlug }: { cars: Car[]; preselectSlug?: string }) {
+  const PAGE_SIZE = 4;
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [pending, startTransition] = useTransition();
-  const initialCar = preselectSlug ? cars.find(c => c.slug === preselectSlug)?.id : '';
+  const preselectedCar = preselectSlug
+    ? cars.find(c => c.slug === preselectSlug && c.available)
+    : undefined;
+  const initialCar = preselectedCar?.id ?? '';
+  const initialVisibleCount = (() => {
+    if (!cars.length) return 0;
+    if (!preselectedCar) return Math.min(PAGE_SIZE, cars.length);
+    const idx = cars.findIndex(c => c.id === preselectedCar.id);
+    if (idx < 0) return Math.min(PAGE_SIZE, cars.length);
+    return Math.min(cars.length, Math.ceil((idx + 1) / PAGE_SIZE) * PAGE_SIZE);
+  })();
+  const [visibleCount, setVisibleCount] = useState(initialVisibleCount);
 
   const [form, setForm] = useState({
     car_id: initialCar ?? '',
@@ -26,6 +38,9 @@ export default function BookingForm({ cars, preselectSlug }: { cars: Car[]; pres
   const [submitted, setSubmitted] = useState<{ ref: string } | null>(null);
 
   const car = useMemo(() => cars.find(c => c.id === form.car_id), [form.car_id, cars]);
+  const visibleCars = useMemo(() => cars.slice(0, visibleCount), [cars, visibleCount]);
+  const canLoadMore = visibleCount < cars.length;
+  const remainingCars = Math.max(0, cars.length - visibleCount);
   const total = car ? car.price_per_day * (Number(form.days) || 1) : 0;
 
   const update = (k: keyof typeof form, v: string | number) =>
@@ -61,7 +76,11 @@ export default function BookingForm({ cars, preselectSlug }: { cars: Car[]; pres
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!car) return;
+    if (!car || !car.available) {
+      setErrors({ car_id: 'يرجى اختيار سيارة متوفرة للحجز' });
+      setStep(1);
+      return;
+    }
     startTransition(async () => {
       const res = await submitBooking({
         car_id: car.id,
@@ -110,16 +129,25 @@ export default function BookingForm({ cars, preselectSlug }: { cars: Car[]; pres
               <div className="field">
                 <label>اختر السيارة</label>
                 <div className="car-pick-grid">
-                  {cars.map(c => (
+                  {visibleCars.map(c => (
                     <button
                       type="button"
                       key={c.id}
-                      className={`car-pick ${form.car_id === c.id ? 'is-selected' : ''}`}
-                      onClick={() => { update('car_id', c.id); setErrors(prev => ({ ...prev, car_id: '' })); }}
+                      className={`car-pick ${form.car_id === c.id ? 'is-selected' : ''} ${c.available ? '' : 'unavailable'}`}
+                      onClick={() => {
+                        if (!c.available) return;
+                        update('car_id', c.id);
+                        setErrors(prev => ({ ...prev, car_id: '' }));
+                      }}
+                      disabled={!c.available}
                       aria-pressed={form.car_id === c.id}
+                      aria-disabled={!c.available}
                     >
                       <div className="car-pick-img">
                         <Image src={c.image_url} alt={c.name_en} fill sizes="(max-width:700px) 100vw, 33vw" />
+                        <span className={`car-pick-status ${c.available ? 'available' : 'booked'}`}>
+                          {c.available ? 'متوفرة' : 'محجوزة'}
+                        </span>
                         <span className="car-pick-price">
                           <span className="num">{c.price_per_day}</span> د.ك<span className="s">/يوم</span>
                         </span>
@@ -142,6 +170,17 @@ export default function BookingForm({ cars, preselectSlug }: { cars: Car[]; pres
                     </button>
                   ))}
                 </div>
+                {canLoadMore && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => setVisibleCount(v => Math.min(cars.length, v + PAGE_SIZE))}
+                    >
+                      تحميل المزيد ({Math.min(PAGE_SIZE, remainingCars)})
+                    </button>
+                  </div>
+                )}
                 {errors.car_id && <div className="err">{errors.car_id}</div>}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
